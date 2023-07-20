@@ -1,9 +1,14 @@
 from bs4 import BeautifulSoup
 import requests
+import json
+import base64
 
 BASE_URL = "https://www.themoviedb.org"
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 
+JSON_DATA = {
+    "content" : []
+}
 
 def retrieveData(path):
 
@@ -34,24 +39,28 @@ def retrieveData(path):
                        .replace("w300", "w600")
                        .replace("h450", "h900"), headers=HEADERS)
     
-
     if res.status_code == 200:
-        img = res.raw
+        img = base64.b64encode(res.content).decode()
+    else:
+        img = ""
 
-
-    print (f"""Title: {extractText(title)} 
-            Release date: {extractText(releaseDate)}
-            Duration: {extractText(duration)}
-            Score: {score}
-            Genres: {extractText(genres)}
-            Tagline: {extractText(tagLine)}
-            Overview: {extractText(overview)}
-            Director: {extractText(director)}
-            Budget: {budget}
-            Revenue: {revenue}
-            VideoId: {video}
-            Image: {img}
-            """)
+    data = {
+        "title" : extractText(title),
+        "release-date" : extractText(releaseDate),
+        "duration" : extractText(duration),
+        "score" : score,
+        "genres" : extractText(genres),
+        "tagline" : extractText(tagLine),
+        "overview" : extractText(overview),
+        "director" : extractText(director),
+        "budget" : budget,
+        "revenue" : revenue,
+        "video-id" : video,
+        "image" : img
+     }
+    
+    JSON_DATA['content'].append(data)
+    
     
 def retrieveTopRatedMoviesByPageParam(pageNumber):
 
@@ -84,3 +93,8 @@ def extractText(value):
 for i in range(1, 2):
     retrieveTopRatedMoviesByPageParam(i)
     retrieveTopRatedSeriesByPageParam(i)
+
+dataString = json.dumps(JSON_DATA, indent = 2, ensure_ascii=False)
+
+with open("test.json", "w") as f:
+    f.write(dataString)
